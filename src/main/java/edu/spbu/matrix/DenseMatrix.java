@@ -1,5 +1,6 @@
 package edu.spbu.matrix;
 
+import java.awt.*;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -58,20 +59,47 @@ public class DenseMatrix implements Matrix {
   @Override
   public Matrix mul(Matrix o) {
     if (o instanceof DenseMatrix) {
-      DenseMatrix m2 = (DenseMatrix) o;
-      int resRows = this.getRows();
-      int resCols = m2.getCols();
+      return this.mul((DenseMatrix) o);
+    }
+    else if (o instanceof SparseMatrix) {
+      return this.mul((SparseMatrix) o);
+    }
+    else throw new RuntimeException("time to cry");
+
+  }
+
+  public DenseMatrix mul(DenseMatrix DMat) {
+    int resRows = this.getRows();
+    int resCols = DMat.getCols();
+    DenseMatrix res = new DenseMatrix(resRows, resCols);
+    for (int i = 0; i < resRows; i++) {
+      for (int j = 0; j < resCols; j++) {
+        for (int k = 0; k < this.cols; k++) {
+          res.denseMatrix[i][j] += this.denseMatrix[i][k] * DMat.denseMatrix[k][j];
+        }
+      }
+    }
+    return res;
+  }
+
+  public DenseMatrix mul(SparseMatrix SMat) {
+    if(cols == 0 || rows == 0 || SMat.cols == 0 || SMat.rows == 0){
+      return null;
+    }
+    else if(cols == SMat.rows) {
+      int resRows = rows;
+      int resCols = SMat.cols;
       DenseMatrix res = new DenseMatrix(resRows, resCols);
-      for (int i = 0; i < resRows; i++) {
-        for (int j = 0; j < resCols; j++) {
-          for (int k = 0; k < this.cols; k++) {
-            res.denseMatrix[i][j] += this.denseMatrix[i][k] * m2.denseMatrix[k][j];
+      for(int i = 0; i < resRows; i++ ) {
+        for (Point p : SMat.SpMat.keySet()) {
+          for (int k = 0; k < resRows; k++) {
+            if (p.x == k) {
+              res.denseMatrix[i][p.y] += denseMatrix[i][k] * SMat.SpMat.get(p);
+            }
           }
         }
       }
-      return res;
-    }
-    return null;
+    return res;
   }
 
   /**
@@ -133,5 +161,16 @@ public class DenseMatrix implements Matrix {
   public int getRows(){
     return this.rows;
   }
+
+  public DenseMatrix transpose() {
+    DenseMatrix transp = new DenseMatrix(cols, rows);
+    for (int i = 0; i < cols; i++) {
+      for (int j = 0; j < rows; j++) {
+        transp.denseMatrix[i][j] = denseMatrix[j][i];
+      }
+    }
+    return transp;
+  }
+
 
 }
