@@ -20,4 +20,7 @@ public interface Matrix
    */
   Matrix dmul(Matrix o);
 
+  int getRows();
+
+  int getCols();
 }

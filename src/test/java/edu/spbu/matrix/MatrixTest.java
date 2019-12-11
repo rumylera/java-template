@@ -16,4 +16,12 @@ public class MatrixTest
     Matrix expected = new DenseMatrix("result.txt");
     assertEquals(expected, m1.mul(m2));
   }
+  @Test
+  public void NulDD(){
+    Matrix m1 = new DenseMatrix(0,0);
+    Matrix m2 = new DenseMatrix(0,0);
+    Matrix expected = m2.mul(m1);
+    assertEquals(0, expected.getCols());
+    assertEquals(0, expected.getRows());
+  }
 }
