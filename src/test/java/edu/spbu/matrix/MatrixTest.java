@@ -30,16 +30,23 @@ public class MatrixTest
     Matrix m2 = new SparseMatrix("sm2.txt");
     Matrix expected = new SparseMatrix("sresult.txt");
     Matrix actual = m1.mul(m2);
-    System.out.println("expected:"+(expected).toString());
-    System.out.println("actual:"+((SparseMatrix)actual).toString());
     assertEquals(expected, actual);
   }
   @Test
   public void mulDS() {
+    Matrix m1 = new SparseMatrix("m1.txt");
+    Matrix m2 = new SparseMatrix("sm2.txt");
+    Matrix expected = new SparseMatrix("dsresult.txt");
+    Matrix actual = m1.mul(m2);
+    assertEquals(expected, actual);
 
   }
   @Test
   public void mulSD() {
-
+    Matrix m1 = new SparseMatrix("sm1.txt");
+    Matrix m2 = new SparseMatrix("m2.txt");
+    Matrix expected = new SparseMatrix("sdresult.txt");
+    Matrix actual = m1.mul(m2);
+    assertEquals(expected, actual);
   }
 }

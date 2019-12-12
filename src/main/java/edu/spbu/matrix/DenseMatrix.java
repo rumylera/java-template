@@ -4,6 +4,7 @@ import java.awt.*;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Objects;
 
 /**
@@ -74,7 +75,28 @@ public class DenseMatrix implements Matrix {
       return res;
     }
     if(o instanceof SparseMatrix){
-
+      if(this.cols != ((SparseMatrix)o).rows) {
+        throw new RuntimeException("Mistake 1");
+      }
+      HashMap<Point, Double> res = new HashMap<>();
+      SparseMatrix result = new SparseMatrix(res, this.rows, ((SparseMatrix)o).cols);
+      SparseMatrix transpSM = ((SparseMatrix) o).transpose();
+      for(Point key: transpSM.SpMat.keySet()) {
+        for (int i = 0; i < this.rows; i++) {
+          if(denseMatrix[i][key.y] != 0) {
+            Point pf = new Point(i, key.x);
+            if(result.SpMat.containsKey(pf)) {
+              double tmp = result.SpMat.get(pf) + denseMatrix[i][key.y] * transpSM.SpMat.get(key);
+              result.SpMat.put(pf, tmp);
+            }
+            else{
+              double tmp = denseMatrix[i][key.y] * transpSM.SpMat.get(key);
+              result.SpMat.put(pf, tmp);
+            }
+          }
+        }
+      }
+      return result;
     }
     return null;
   }
@@ -149,10 +171,7 @@ public class DenseMatrix implements Matrix {
 
   @Override
   public int hashCode () {
-
-    int result = Objects.hash(rows, cols);
-    result = 31 * result + Arrays.deepHashCode(denseMatrix);
-    return result;
+        return 1;
   }
 
 }

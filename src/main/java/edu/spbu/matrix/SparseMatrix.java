@@ -2,6 +2,7 @@ package edu.spbu.matrix;
 
 import java.awt.*;
 import java.io.*;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Objects;
 
@@ -38,12 +39,13 @@ public class SparseMatrix implements Matrix
               SpMat.put(p, elem);
             }
           }
-          h++;
+
         }
+        h++;
         line = br.readLine();
       }
-      cols = h;
-      rows = len;
+      cols = len;
+      rows = h;
     } catch (IOException e) {
       e.printStackTrace();
     }
@@ -91,26 +93,36 @@ public class SparseMatrix implements Matrix
       return result;
     }
     else if (o instanceof DenseMatrix) {
-      DenseMatrix DMat = (DenseMatrix) o;
-      if (this.cols == DMat.cols && this.SpMat != null && DMat.denseMatrix != null) {
-        double[][] res = new double[this.rows][DMat.cols];
-        DenseMatrix transpDM = DMat.transpose();
-        for (Point p : this.SpMat.keySet()) {
-          for (int j = 0; j < transpDM.rows; j++) {
-            for (int k = 0; k < this.cols; k++) {
-              if (p.y == k) {
-                res[p.x][j] += this.SpMat.get(p) * transpDM.denseMatrix[j][k];
-              }
+      if(this.cols != ((DenseMatrix)o).rows) {
+        throw new RuntimeException("Mistake 2");
+      }
+      HashMap<Point, Double> res = new HashMap<>();
+      SparseMatrix result = new SparseMatrix(res, this.rows, ((DenseMatrix)o).cols);
+      DenseMatrix transpDM = ((DenseMatrix) o).transpose();
+      for(Point key: SpMat.keySet()) {
+        for(int i = 0; i < transpDM.rows; i++) {
+          if(transpDM.denseMatrix[i][key.y] != 0) {
+            Point pf = new Point(key.x, i);
+            if(result.SpMat.containsKey(pf)) {
+              double tmp = result.SpMat.get(pf) + SpMat.get(key) * transpDM.denseMatrix[i][key.y];
+              result.SpMat.put(pf, tmp);
+            }
+            else {
+              double tmp = SpMat.get(key) * transpDM.denseMatrix[i][key.y];
+              result.SpMat.put(pf, tmp);
             }
           }
         }
-        DenseMatrix result = new DenseMatrix(this.rows, DMat.cols);
-        result.denseMatrix = res;
-        return result;
-      } else throw new RuntimeException("Mistake 2");
-    } else throw new RuntimeException("Mistake 3");
+      }
+      return result;
+    }
+    return null;
   }
+    @Override
+    public int hashCode() {
 
+      return 1;
+    }
 
 
 
@@ -135,10 +147,7 @@ public class SparseMatrix implements Matrix
     return 0;
   }
 
-  @Override
-  public int hashCode() {
-    return Objects.hash(rows, cols, SpMat);
-  }
+
 
   /**
    * спавнивает с обоими вариантами
@@ -217,5 +226,6 @@ public class SparseMatrix implements Matrix
     }
     return new SparseMatrix(transp, rows, cols);
   }
+
 
 }
