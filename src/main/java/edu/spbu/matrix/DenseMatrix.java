@@ -4,6 +4,7 @@ import java.awt.*;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Objects;
 
 /**
  * Плотная матрица
@@ -59,118 +60,99 @@ public class DenseMatrix implements Matrix {
   @Override
   public Matrix mul(Matrix o) {
     if (o instanceof DenseMatrix) {
-      return this.mul((DenseMatrix) o);
-    }
-    else if (o instanceof SparseMatrix) {
-      return this.mul((SparseMatrix) o);
-    }
-    else throw new RuntimeException("time to cry");
-
-  }
-
-  public DenseMatrix mul(DenseMatrix DMat) {
-    int resRows = this.getRows();
-    int resCols = DMat.getCols();
-    DenseMatrix res = new DenseMatrix(resRows, resCols);
-    for (int i = 0; i < resRows; i++) {
-      for (int j = 0; j < resCols; j++) {
-        for (int k = 0; k < this.cols; k++) {
-          res.denseMatrix[i][j] += this.denseMatrix[i][k] * DMat.denseMatrix[k][j];
-        }
-      }
-    }
-    return res;
-  }
-
-  public DenseMatrix mul(SparseMatrix SMat) {
-    if(cols == 0 || rows == 0 || SMat.cols == 0 || SMat.rows == 0){
-      return null;
-    }
-    else if(cols == SMat.rows) {
-      int resRows = rows;
-      int resCols = SMat.cols;
+      DenseMatrix m2 = (DenseMatrix) o;
+      int resRows = this.getRows();
+      int resCols = m2.getCols();
       DenseMatrix res = new DenseMatrix(resRows, resCols);
-      for(int i = 0; i < resRows; i++ ) {
-        for (Point p : SMat.SpMat.keySet()) {
-          for (int k = 0; k < resRows; k++) {
-            if (p.x == k) {
-              res.denseMatrix[i][p.y] += denseMatrix[i][k] * SMat.SpMat.get(p);
-            }
+      for (int i = 0; i < resRows; i++) {
+        for (int j = 0; j < resCols; j++) {
+          for (int k = 0; k < this.cols; k++) {
+            res.denseMatrix[i][j] += this.denseMatrix[i][k] * m2.denseMatrix[k][j];
           }
         }
       }
-    return res;
-  }
+      return res;
+    }
+    if(o instanceof SparseMatrix){
 
-  /**
-   * многопоточное умножение матриц
-   *
-   * @param o
-   * @return
-   */
-  @Override
-  public Matrix dmul(Matrix o) {
+    }
     return null;
   }
-  /**
-   * спавнивает с обоими вариантами
-   *
-   * @param o
-   * @return
-   */
-  @Override
-  public boolean equals(Object o) {
-    if (o == this) {
-      return true;
+    /**
+     * многопоточное умножение матриц
+     *
+     * @param o
+     * @return
+     */
+    @Override
+    public Matrix dmul (Matrix o){
+      return null;
     }
-    if(o instanceof DenseMatrix){
-      DenseMatrix m = (DenseMatrix) o;
-      if(this.rows != m.rows || this.cols != m.cols ){
-        return false;
-      }
-      else {
-        for (int i = 0; i < rows; i++) {
-          for (int j = 0; j < cols; j++) {
-            if (this.denseMatrix[i][j] != m.denseMatrix[i][j]) {
-              return false;
-            }
-          }
-        }
+    /**
+     * спавнивает с обоими вариантами
+     *
+     * @param o
+     * @return
+     */
+    @Override
+    public boolean equals (Object o){
+      if (o == this) {
         return true;
       }
+      if (o instanceof DenseMatrix) {
+        DenseMatrix m = (DenseMatrix) o;
+        if (this.rows != m.rows || this.cols != m.cols) {
+          return false;
+        } else {
+          for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+              if (this.denseMatrix[i][j] != m.denseMatrix[i][j]) {
+                return false;
+              }
+            }
+          }
+          return true;
+        }
+      }
+      return false;
     }
-    return false;
-  }
+    @Override
+    public String toString () {
+      StringBuilder str = new StringBuilder();
+      for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < cols; j++) {
+          str.append(denseMatrix[i][j]);
+          str.append(" ");
+        }
+        str.append("\n");
+      }
+      return (str.toString());
+    }
+
+    public int getCols () {
+      return this.cols;
+    }
+
+    public int getRows () {
+      return this.rows;
+    }
+
+    public DenseMatrix transpose () {
+      DenseMatrix transp = new DenseMatrix(cols, rows);
+      for (int i = 0; i < cols; i++) {
+        for (int j = 0; j < rows; j++) {
+          transp.denseMatrix[i][j] = denseMatrix[j][i];
+        }
+      }
+      return transp;
+    }
+
   @Override
-  public String toString() {
-    StringBuilder str = new StringBuilder();
-    for(int i=0; i<rows;i++) {
-      for (int j = 0; j < cols; j++) {
-        str.append(denseMatrix[i][j]);
-        str.append(" ");
-      }
-      str.append("\n");
-    }
-    return (str.toString());
-  }
+  public int hashCode () {
 
-  public int getCols(){
-    return this.cols;
+    int result = Objects.hash(rows, cols);
+    result = 31 * result + Arrays.deepHashCode(denseMatrix);
+    return result;
   }
-
-  public int getRows(){
-    return this.rows;
-  }
-
-  public DenseMatrix transpose() {
-    DenseMatrix transp = new DenseMatrix(cols, rows);
-    for (int i = 0; i < cols; i++) {
-      for (int j = 0; j < rows; j++) {
-        transp.denseMatrix[i][j] = denseMatrix[j][i];
-      }
-    }
-    return transp;
-  }
-
 
 }

@@ -24,4 +24,22 @@ public class MatrixTest
     assertEquals(0, expected.getCols());
     assertEquals(0, expected.getRows());
   }
+  @Test
+  public void mulSS() {
+    Matrix m1 = new SparseMatrix("sm1.txt");
+    Matrix m2 = new SparseMatrix("sm2.txt");
+    Matrix expected = new SparseMatrix("sresult.txt");
+    Matrix actual = m1.mul(m2);
+    System.out.println("expected:"+(expected).toString());
+    System.out.println("actual:"+((SparseMatrix)actual).toString());
+    assertEquals(expected, actual);
+  }
+  @Test
+  public void mulDS() {
+
+  }
+  @Test
+  public void mulSD() {
+
+  }
 }
