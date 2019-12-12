@@ -38,8 +38,8 @@ public class SparseMatrix implements Matrix
               SpMat.put(p, elem);
             }
           }
+          h++;
         }
-        h++;
         line = br.readLine();
       }
       cols = h;
@@ -107,35 +107,12 @@ public class SparseMatrix implements Matrix
         DenseMatrix result = new DenseMatrix(this.rows, DMat.cols);
         result.denseMatrix = res;
         return result;
-      } else throw new RuntimeException("time to cry");
-    } else throw new RuntimeException("time to cry");
+      } else throw new RuntimeException("Mistake 2");
+    } else throw new RuntimeException("Mistake 3");
   }
 
 
 
-  public DenseMatrix mul(DenseMatrix DMat){
-    if(cols == DMat.cols && SpMat!=null && DMat.denseMatrix!=null)
-    {
-      double[][] res=new double[rows][DMat.cols];
-      DenseMatrix transpDM = DMat.transpose();
-      for(Point p: SpMat.keySet())
-      {
-        for(int j = 0; j < transpDM.rows; j++)
-        {
-          for(int k = 0; k < cols; k++)
-          {
-            if(p.y == k)
-            {
-              res[p.x][j]+=SpMat.get(p)*transpDM.denseMatrix[j][k];
-            }
-          }
-        }
-      }
-      DenseMatrix result =  new DenseMatrix(rows, DMat.cols);
-      result.denseMatrix = res;
-      return result;
-    }else throw new RuntimeException("time to cry");
-  }
 
   /**
    * многопоточное умножение матриц
