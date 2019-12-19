@@ -7,12 +7,12 @@ import java.net.Socket;
 import java.util.Arrays;
 
 public class Server {
-    private static DataInputStream sin;
-    private static DataOutputStream sout;
+    public static DataInputStream sin;
+    public static DataOutputStream sout;
 
     public static void main(String[] args){
         try{
-            ServerSocket server = new ServerSocket(666);
+            ServerSocket server = new ServerSocket(8080);
             System.out.println("Server is running(away from you)...");
             while(true){
                 Socket client = server.accept();
@@ -34,7 +34,7 @@ public class Server {
             if(line != null){
                 String[] str = line.split(" ");
                 System.out.println(Arrays.toString(str));
-                if(str[0].equals("Get")){
+                if(str[0].equals("GET")){
                     address = str[1].substring(1);
                     System.out.println("Hey, " + address + ", where r u??");
                     return address;
@@ -60,11 +60,17 @@ public class Server {
                 str = br.readLine();
             }
             content = responser.toString();
-            String message="Server answer: " + content;
+            String message="HTTP/1.1 200 OK\r\n" +
+                    "Server: Kakoi-to server\r\n" +
+                    "Content-Type: text/html\r\n" +
+                    "Connection: close\r\n\r\n" + content;;
             sout.write(message.getBytes());
             sout.close();
-        } else{
-        sout.writeUTF("Net tut takih pokemonov");
+        } else
+        {
+            sout.write("<html><head><title>сломалосб</title></head><body><h1>404</h1></body></html>".getBytes());
+            sout.flush();
         }
+        sout.close();
     }
 }
