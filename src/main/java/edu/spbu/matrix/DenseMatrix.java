@@ -20,9 +20,10 @@ public class DenseMatrix implements Matrix {
     this.denseMatrix = new double[rows][cols];
   }
 
-  /**
-   * @param fileName
-   */
+
+   /**
+    * @param fileName
+    */
   public DenseMatrix(String fileName) {
     ArrayList<double[]> tmp = new ArrayList<>();
     try {
@@ -100,22 +101,80 @@ public class DenseMatrix implements Matrix {
     }
     return null;
   }
-    /**
-     * многопоточное умножение матриц
-     *
-     * @param o
-     * @return
-     */
-    @Override
-    public Matrix dmul (Matrix o){
+  /**
+   * многопоточное умножение матриц
+   *
+   * @param o
+   * @return
+   */
+  class MultiDense implements Runnable{
+      int start, end, rows, cols;
+      DenseMatrix right, left,result;
+
+      MultiDense(int begin, int fin, int cols, DenseMatrix right, DenseMatrix left, DenseMatrix result){
+          this.start = begin;
+          this.end = fin;
+          this.rows = fin - begin;
+          this.cols = cols;
+          this.right = right;
+          this.left = left;
+          this.result = result;
+      }
+
+      @Override
+      public void run(){
+          for(int i=start;i<end;i++) {
+              for (int j = 0; j < result.cols; j++) {
+                  for (int k = 0; k < this.cols; k++) {
+                      result.denseMatrix[i][j] += left.denseMatrix[i][k] * right.denseMatrix[j][k];
+                  }
+              }
+          }
+      }
+
+  }
+  @Override
+  public Matrix dmul (Matrix o){
+      if(o instanceof DenseMatrix){
+          if(this.cols != ((DenseMatrix) o).rows){
+              throw new RuntimeException("Mistake 1");
+          }
+          DenseMatrix result = new DenseMatrix(this.rows, ((DenseMatrix) o).cols);
+          DenseMatrix transpDM = ((DenseMatrix) o).transpose();
+          int thrds = Runtime.getRuntime().availableProcessors();
+          Thread[] threads = new Thread[thrds];
+          int r = rows%thrds;
+          for(int i=0;i<thrds;i++){
+              int j=rows/thrds;
+              MultiDense multiDense;
+              if(i == r && i != 0) {
+                  multiDense = new MultiDense(i * j, j * (i + 1) + r, cols, transpDM,this, result);
+              }
+              else {
+                  multiDense = new MultiDense(i * j, j * (i + 1), cols, transpDM,this, result);
+              }
+              threads[i]= new Thread(multiDense);
+              threads[i].start();
+          }
+          for(int i=0;i<thrds;i++){
+              try {
+                  threads[i].join();
+              } catch (InterruptedException e) {
+                  e.printStackTrace();
+              }
+          }
+
+          return(result);
+      }
+
       return null;
-    }
-    /**
-     * спавнивает с обоими вариантами
-     *
-     * @param o
-     * @return
-     */
+  }
+  /**
+   * спавнивает с обоими вариантами
+   *
+   * @param o
+   * @return
+   */
     @Override
     public boolean equals (Object o){
       if (o == this) {
@@ -171,7 +230,9 @@ public class DenseMatrix implements Matrix {
 
   @Override
   public int hashCode () {
-        return 1;
+    int result = Objects.hash(rows, cols);
+    result = 31 * result + Arrays.deepHashCode(denseMatrix);
+    return result;
   }
 
 }

@@ -2,6 +2,7 @@ package edu.spbu.matrix;
 
 import java.awt.*;
 import java.io.*;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Objects;
@@ -120,9 +121,12 @@ public class SparseMatrix implements Matrix
   }
     @Override
     public int hashCode() {
-
-      return 1;
+    int result = Objects.hash(rows, cols);
+    for(Point key: SpMat.keySet()){
+      result += 31 + (SpMat.get(key).hashCode()<<2);
     }
+    return result;
+  }
 
 
 
@@ -132,10 +136,72 @@ public class SparseMatrix implements Matrix
    * @param o
    * @return
    */
+  class MultiSparse implements Runnable {
+
+      int start, step;
+      SparseMatrix left, right, result;
+
+      MultiSparse(int begin, int incr, SparseMatrix left, SparseMatrix right, SparseMatrix result) {
+          this.start = begin;
+          this.step = incr;
+          this.left = left;
+          this.right = right;
+          this.result = result;
+      }
+
+      @Override
+      public void run(){
+          for(Point key: left.SpMat.keySet()) {
+              for (int i = start; i < start + step; i++) {
+                  Point p1 = new Point(i, key.y);
+                  if (right.SpMat.containsKey(p1)) {
+                      Point p2 = new Point(key.x, i);
+                      result.refresh(p2, key, p1, result, left, right);
+                  }
+              }
+          }
+      }
+  }
+  synchronized public void refresh(Point p2, Point key, Point p1, SparseMatrix result, SparseMatrix left, SparseMatrix right) {
+        if(result.SpMat.containsKey(p2)){
+            double t = result.SpMat.get(p2) + left.SpMat.get(key) * right.SpMat.get(p1);
+            result.SpMat.put(p2, t);
+        }
+        else{
+            double t = left.SpMat.get(key) * right.SpMat.get(p1);
+            result.SpMat.put(p2, t);
+        }
+  }
   @Override public Matrix dmul(Matrix o)
   {
-    return null;
+      if(o instanceof SparseMatrix){
+          if (this.cols != ((SparseMatrix)o).rows) {
+              throw new RuntimeException("Mistake 1");
+          }
+          HashMap<Point, Double> res = new HashMap<>();
+          SparseMatrix result = new SparseMatrix(res, this.rows, ((SparseMatrix)o).cols);
+          SparseMatrix transpSM = ((SparseMatrix) o).transpose();
+          int thrds = Runtime.getRuntime().availableProcessors();
+          int step = transpSM.rows/thrds + 1;
+          ArrayList<Thread> threads = new ArrayList<>();
+          for(int i=0; i<transpSM.rows; i+=step){
+              MultiSparse multiSparse = new MultiSparse( i, step,this, transpSM, result) ;
+              Thread t = new Thread(multiSparse);
+              threads.add(t);
+              t.start();
+          }
+          for(Thread th:threads){
+              try {
+                  th.join();
+              } catch (InterruptedException e) {
+                  e.printStackTrace();
+              }
+          }
+          return (result);
+      }
+      return null;
   }
+
 
   @Override
   public int getRows() {
@@ -226,6 +292,5 @@ public class SparseMatrix implements Matrix
     }
     return new SparseMatrix(transp, rows, cols);
   }
-
-
 }
+
